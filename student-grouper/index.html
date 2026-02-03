@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Grouper (Groups of 4)</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container header__inner">
+        <div>
+          <h1 class="title">Student Grouper</h1>
+          <p class="subtitle">Upload a CSV roster → generate groups of 4 with roles.</p>
+        </div>
+        <div class="header__actions">
+          <button id="btnReset" class="btn btn--ghost" type="button">Reset</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title">1) Upload roster CSV</h2>
+          <p class="card__desc">
+            Your CSV needs a header row. Recommended columns: <code>Name</code>, optional <code>ID</code>.
+          </p>
+        </div>
+
+        <div class="upload">
+          <label class="upload__drop" for="csvFile">
+            <input id="csvFile" type="file" accept=".csv,text/csv" />
+            <div class="upload__dropInner">
+              <div class="upload__title">Drop a CSV here, or click to choose</div>
+              <div class="upload__hint">We parse locally in your browser (no uploads).</div>
+            </div>
+          </label>
+
+          <div class="upload__right">
+            <div class="field">
+              <label for="nameColumn" class="label">Name column</label>
+              <select id="nameColumn" class="select" disabled></select>
+              <div class="help">Pick the CSV column that contains student names.</div>
+            </div>
+
+            <div class="field">
+              <label for="idColumn" class="label">ID column (optional)</label>
+              <select id="idColumn" class="select" disabled></select>
+              <div class="help">Optional unique ID column. Leave blank if you don’t have one.</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="uploadError" class="alert alert--error hidden" role="alert"></div>
+        <div id="uploadInfo" class="alert alert--info hidden" role="status"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header row">
+          <div>
+            <h2 class="card__title">2) Review roster</h2>
+            <p class="card__desc">Remove anyone you don’t want included before grouping.</p>
+          </div>
+
+          <div class="row__right">
+            <div class="pill">
+              <span class="pill__label">Students</span>
+              <span id="studentCount" class="pill__value">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar__left">
+            <div class="field field--inline">
+              <label for="search" class="label">Search</label>
+              <input id="search" class="input" type="text" placeholder="Type a name…" disabled />
+            </div>
+          </div>
+          <div class="toolbar__right">
+            <button id="btnClearRoster" class="btn btn--ghost" type="button" disabled>Clear roster</button>
+          </div>
+        </div>
+
+        <div class="tableWrap">
+          <table class="table" aria-label="Roster table">
+            <thead>
+              <tr>
+                <th style="width: 56px">#</th>
+                <th>Name</th>
+                <th style="width: 120px">ID</th>
+                <th style="width: 120px"></th>
+              </tr>
+            </thead>
+            <tbody id="rosterBody">
+              <tr>
+                <td colspan="4" class="empty">
+                  Upload a CSV to see your roster here.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2 class="card__title">3) Create groups</h2>
+          <p class="card__desc">
+            Groups are randomized. Each group gets one of each role.
+          </p>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="groupSize" class="label">Group size</label>
+            <select id="groupSize" class="select" disabled>
+              <option value="4" selected>4 (Lead / Support / Cynic / Organizer)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="remainderMode" class="label">If not divisible by 4…</label>
+            <select id="remainderMode" class="select" disabled>
+              <option value="extras" selected>Create an “Extras” list</option>
+              <option value="smaller">Allow smaller last group</option>
+            </select>
+            <div class="help">Choose how to handle leftover students.</div>
+          </div>
+
+          <div class="field">
+            <label for="seed" class="label">Shuffle seed (optional)</label>
+            <input id="seed" class="input" type="text" placeholder="e.g. Period2-Feb3" disabled />
+            <div class="help">Same seed + same roster = same grouping.</div>
+          </div>
+
+          <div class="field">
+            <label class="label">Actions</label>
+            <div class="btnRow">
+              <button id="btnGenerate" class="btn btn--primary" type="button" disabled>Generate groups</button>
+              <button id="btnShuffle" class="btn" type="button" disabled>Shuffle again</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="groupsError" class="alert alert--error hidden" role="alert"></div>
+
+        <div class="toolbar toolbar--tight">
+          <div class="toolbar__left">
+            <div class="pill">
+              <span class="pill__label">Groups</span>
+              <span id="groupCount" class="pill__value">0</span>
+            </div>
+          </div>
+          <div class="toolbar__right">
+            <button id="btnCopy" class="btn btn--ghost" type="button" disabled>Copy</button>
+            <button id="btnDownloadCsv" class="btn btn--ghost" type="button" disabled>Download CSV</button>
+          </div>
+        </div>
+
+        <div id="groupsWrap" class="groups"></div>
+      </section>
+
+      <footer class="footer">
+        <div class="footer__inner">
+          <div class="footer__note">
+            Tip: Use headers like <code>Name</code> / <code>ID</code> in your CSV.
+          </div>
+          <div class="footer__note">
+            Roles: <span class="tag">Lead Idea</span> <span class="tag">Support Idea</span>
+            <span class="tag">Cynic</span> <span class="tag">Organizer</span>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
